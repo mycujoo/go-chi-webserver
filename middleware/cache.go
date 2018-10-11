@@ -39,6 +39,7 @@ func (c *CacheHandler) Cache(ttl int) func(next http.Handler) http.Handler {
 				cacheKey := generateCacheKey(r.RequestURI)
 				obj := map[string]interface{}{
 					"body": string(sw.body),
+					"type": string(sw.contentType),
 					"ttl":  strconv.Itoa(ttl),
 				}
 
@@ -72,6 +73,7 @@ func (c *CacheHandler) Middleware(next http.Handler) http.Handler {
 				ttl, _ := strconv.Atoi(cached["ttl"].(string))
 				age := ttl - (int(expireAt) - int(now))
 
+				w.Header().Set("Content-Type", string(cached["type"].(string)))
 				w.Header().Set("Age", strconv.Itoa(age))
 				w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", ttl))
 				w.Header().Set("Status", strconv.Itoa(http.StatusOK))
@@ -93,12 +95,15 @@ func generateCacheKey(uri string) []byte {
 
 type responseWrapper struct {
 	http.ResponseWriter
-	body       []byte
-	statusCode int
+	body        []byte
+	statusCode  int
+	contentType string
 }
 
 func (w *responseWrapper) Write(b []byte) (int, error) {
+	w.contentType = w.ResponseWriter.Header().Get("Content-Type")
 	w.body = b
+
 	return w.ResponseWriter.Write(b)
 }
 
