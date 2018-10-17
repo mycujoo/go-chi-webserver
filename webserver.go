@@ -28,6 +28,6 @@ func SetupRouter(env string) *chi.Mux {
 }
 
 // Listen and serve HTTP server
-func Listen(addr string, router *chi.Mux) {
-	http.ListenAndServe(addr, router)
+func Listen(addr string, router *chi.Mux) error {
+	return http.ListenAndServe(addr, router)
 }
