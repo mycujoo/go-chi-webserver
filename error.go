@@ -1,4 +1,4 @@
-package error
+package webserver
 
 import (
 	"net/http"
@@ -23,7 +23,7 @@ func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
 func ErrNotFound() render.Renderer {
 	return &ErrResponse{
 		HTTPStatusCode: http.StatusNotFound,
-		StatusText:     "Not found",
+		StatusText:     http.StatusText(http.StatusNotFound),
 	}
 }
 
@@ -31,7 +31,7 @@ func ErrInvalidRequest(err error) render.Renderer {
 	return &ErrResponse{
 		Err:            err,
 		HTTPStatusCode: http.StatusBadRequest,
-		StatusText:     "Invalid request",
+		StatusText:     http.StatusText(http.StatusBadRequest),
 		ErrorText:      err.Error(),
 	}
 }
@@ -40,7 +40,7 @@ func ErrInternalServerError(err error) render.Renderer {
 	return &ErrResponse{
 		Err:            err,
 		HTTPStatusCode: http.StatusInternalServerError,
-		StatusText:     "Internal server error",
+		StatusText:     http.StatusText(http.StatusInternalServerError),
 		ErrorText:      err.Error(),
 	}
 }
