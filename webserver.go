@@ -1,6 +1,7 @@
 package webserver
 
 import (
+	"github.com/go-chi/render"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -22,7 +23,11 @@ func SetupRouter(env string) *chi.Mux {
 	router.Use(middleware.Recoverer)
 
 	router.Get("/", h.Ping)
-	router.NotFound(h.NoRoute)
+
+	// NoRoute handler for catching all incorrect routes
+	router.NotFound(func (w http.ResponseWriter, r *http.Request) {
+		render.Render(w, r, ErrNotFound())
+	})
 
 	return router
 }
