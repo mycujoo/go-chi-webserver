@@ -25,6 +25,11 @@ func SetupRouter(env string) *chi.Mux {
 	router.Use(chiMiddleware.DefaultCompress)
 	router.Use(chiMiddleware.Recoverer)
 
+	// NoRoute handler for catching all incorrect routes
+	router.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		render.Render(w, r, ErrNotFound())
+	})
+
 	return router
 }
 
@@ -38,11 +43,5 @@ func EnableMetrics(name string, r *chi.Mux) {
 // All default routes must be defined after middlewares.
 func Listen(addr string, router *chi.Mux) error {
 	router.Get("/", h.Ping)
-
-	// NoRoute handler for catching all incorrect routes
-	router.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		render.Render(w, r, ErrNotFound())
-	})
-
 	return http.ListenAndServe(addr, router)
 }
