@@ -1,12 +1,15 @@
 package webserver
 
 import (
-	"github.com/go-chi/render"
 	"net/http"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/render"
 
+	"github.com/go-chi/chi"
+	chiMiddleware "github.com/go-chi/chi/middleware"
+	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/mycujoo/go-chi-webserver/middleware"
 	h "github.com/mycujoo/go-chi-webserver/pkg/handler"
 )
 
@@ -14,25 +17,31 @@ import (
 func SetupRouter(env string) *chi.Mux {
 	router := chi.NewRouter()
 
-	router.Use(middleware.RealIP)
-	router.Use(middleware.RequestID)
+	router.Use(chiMiddleware.RealIP)
+	router.Use(chiMiddleware.RequestID)
 	if env != "production" {
-		router.Use(middleware.Logger)
+		router.Use(chiMiddleware.Logger)
 	}
-	router.Use(middleware.DefaultCompress)
-	router.Use(middleware.Recoverer)
-
-	router.Get("/", h.Ping)
+	router.Use(chiMiddleware.DefaultCompress)
+	router.Use(chiMiddleware.Recoverer)
 
 	// NoRoute handler for catching all incorrect routes
-	router.NotFound(func (w http.ResponseWriter, r *http.Request) {
+	router.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, ErrNotFound())
 	})
 
 	return router
 }
 
-// Listen and serve HTTP server
+func EnableMetrics(name string, r *chi.Mux) {
+	m := middleware.NewPrometheus(name)
+	r.Use(m)
+	r.Handle("/metrics", prometheus.Handler())
+}
+
+// Listen and serve HTTP server.
+// All default routes must be defined after middlewares.
 func Listen(addr string, router *chi.Mux) error {
+	router.Get("/", h.Ping)
 	return http.ListenAndServe(addr, router)
 }
