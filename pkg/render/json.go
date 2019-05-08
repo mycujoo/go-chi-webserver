@@ -3,6 +3,7 @@ package render
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/blendle/zapdriver"
@@ -10,9 +11,14 @@ import (
 	"go.uber.org/zap"
 )
 
+// Options contains response options for cache control
+type Options struct {
+	MaxAge int
+}
+
 // JSON marshals 'v' to JSON, automatically escaping HTML and setting the
 // Content-Type as application/json.
-func JSON(logger *zap.Logger, w http.ResponseWriter, r *http.Request, v interface{}) {
+func JSON(logger *zap.Logger, w http.ResponseWriter, r *http.Request, v interface{}, opts Options) {
 	buf := &bytes.Buffer{}
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(true)
@@ -26,6 +32,7 @@ func JSON(logger *zap.Logger, w http.ResponseWriter, r *http.Request, v interfac
 			zapdriver.HTTP(zapdriver.NewHTTP(r, nil)),
 		)
 
+		w.Header().Set("Cache-Control", "no-cache")
 		w.WriteHeader(http.StatusInternalServerError)
 		errorCoded, _ := json.Marshal(struct {
 			Error string `json:"error"`
@@ -34,6 +41,12 @@ func JSON(logger *zap.Logger, w http.ResponseWriter, r *http.Request, v interfac
 		})
 		_, _ = w.Write(errorCoded)
 		return
+	}
+
+	if opts.MaxAge != 0 {
+		w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", opts.MaxAge))
+	} else {
+		w.Header().Set("Cache-Control", "no-cache")
 	}
 
 	if status, ok := r.Context().Value(render.StatusCtxKey).(int); ok {
