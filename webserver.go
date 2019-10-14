@@ -10,7 +10,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/mycujoo/go-chi-webserver/middleware"
-	h "github.com/mycujoo/go-chi-webserver/pkg/handler"
 )
 
 // SetupRouter function for creating router instance
@@ -42,6 +41,5 @@ func EnableMetrics(name string, r *chi.Mux) {
 // Listen and serve HTTP server.
 // All default routes must be defined after middlewares.
 func Listen(addr string, router *chi.Mux) error {
-	router.Get("/", h.Ping)
 	return http.ListenAndServe(addr, router)
 }
