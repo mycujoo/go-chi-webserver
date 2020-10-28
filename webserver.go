@@ -3,11 +3,10 @@ package webserver
 import (
 	"net/http"
 
-	"github.com/go-chi/render"
-
 	"github.com/go-chi/chi"
 	chiMiddleware "github.com/go-chi/chi/middleware"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/go-chi/render"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/mycujoo/go-chi-webserver/middleware"
 )
@@ -35,7 +34,7 @@ func SetupRouter(env string) *chi.Mux {
 func EnableMetrics(name string, r *chi.Mux) {
 	m := middleware.NewPrometheus(name)
 	r.Use(m)
-	r.Handle("/metrics", prometheus.Handler())
+	r.Handle("/metrics", promhttp.Handler())
 }
 
 // Listen and serve HTTP server.
